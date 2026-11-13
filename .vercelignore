@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+ENV/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# SQLite (not used in production)
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment files (secrets managed in Vercel dashboard)
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+dist/
+build/
+*.log
+
+# Test files
+.pytest_cache/
+coverage/
+.coverage
+
+# Git
+.git/
+.gitignore
+
+# Documentation (build separately if needed)
+*.md
+
+# Snapshots
+.snapshots/

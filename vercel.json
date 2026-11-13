@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "backend/main.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "backend/main.py"
+    }
+  ],
+  "env": {
+    "DATABASE_URL": "@database_url",
+    "FRONTEND_ORIGINS": "https://formula-flow-9461.vercel.app",
+    "PAYPAL_ENVIRONMENT": "sandbox",
+    "PAYPAL_CLIENT_ID": "@paypal_client_id",
+    "PAYPAL_CLIENT_SECRET": "@paypal_client_secret",
+    "PAYPAL_WEBHOOK_ID": "@paypal_webhook_id",
+    "PAYPAL_PAYOUT_SIMULATED": "false",
+    "PICKUP_TOKEN_ENCRYPTION_KEY": "@pickup_token_encryption_key",
+    "OPENAI_API_KEY": "@openai_api_key",
+    "OPENAI_MODEL": "@openai_model"
+  }
+}

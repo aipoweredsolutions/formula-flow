@@ -1,5 +1,15 @@
 # FormulaFlow frontend
 
+## Production Deployment
+
+**This project is deployed on Vercel**. See [DEPLOYMENT.md](../DEPLOYMENT.md) for complete deployment instructions.
+
+**Production URLs:**
+- Frontend: https://formula-flow-9461.vercel.app
+- Backend: https://formula-flow-uh98.vercel.app
+
+## Local Development
+
 The React/Vite app includes a public PayPal donor portal, a mobile-friendly
 recipient request form, and an authenticated operations dashboard. During
 local development, Vite forwards `/api` requests to `http://127.0.0.1:8000`.
@@ -95,5 +105,21 @@ backend, captures approved payments, and records confirmed captures in the
 donation ledger and support pool. The backend must use the matching
 `PAYPAL_CLIENT_ID`, its secret in `PAYPAL_CLIENT_SECRET`, and
 `PAYPAL_ENVIRONMENT=sandbox`; never use a Live app's credentials. See
-[the backend README](../backend/README.md) for webhook, pool, and payout
-configuration.
+[the backend README](../backend/README.md) and [DEPLOYMENT.md](../DEPLOYMENT.md) 
+for webhook, pool, and payout configuration.
+
+## Vercel Deployment
+
+For production deployment to Vercel, set these environment variables in the Vercel dashboard:
+
+- `VITE_API_BASE_URL` - Your backend URL (e.g., `https://formula-flow-uh98.vercel.app`)
+- `VITE_PAYPAL_CLIENT_ID` - PayPal Sandbox client ID (safe to expose in browser)
+- `VITE_AG_STUDIO_LICENSE_KEY` - AG Studio license key
+- `VITE_PAYPAL_HOSTED_BUTTON_ID` - (Optional) PayPal hosted button ID
+
+**NEVER** put these in frontend variables:
+- `PAYPAL_CLIENT_SECRET` - Backend only!
+- `OPENAI_API_KEY` - Backend only!
+- `DATABASE_URL` - Backend only!
+
+See [DEPLOYMENT.md](../DEPLOYMENT.md) for complete deployment guide.

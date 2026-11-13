@@ -1,5 +1,15 @@
 # FormulaFlow Requests API
 
+## Production Deployment
+
+**This project is deployed on Vercel**. See [DEPLOYMENT.md](../DEPLOYMENT.md) for complete Vercel deployment instructions.
+
+**Production URLs:**
+- Backend: https://formula-flow-uh98.vercel.app
+- Frontend: https://formula-flow-9461.vercel.app
+
+**IMPORTANT**: Vercel uses serverless functions. You MUST use PostgreSQL (not SQLite) for production. SQLite will not persist between function invocations.
+
 ## Run locally
 
 From the repository root, copy `backend/.env.example` to `backend/.env` and
@@ -299,52 +309,53 @@ and does not send recipient information to an external AI provider. Merchant
 matching uses shared neighborhood/city terms because requests currently
 provide text locations rather than coordinates.
 
-## Render deployment
+## Vercel Deployment
 
-The repository-root [`render.yaml`](../render.yaml) Blueprint configures a
-FastAPI web service and the React/Vite static site. In Render, choose **New →
-Blueprint**, connect this repository, and apply the Blueprint. It builds the
-backend with `pip install -r backend/requirements.txt`, runs
-`uvicorn backend.main:app --host 0.0.0.0 --port $PORT`, and builds the frontend
-with `npm ci && npm run build`. The API health check is `GET /health`; it
-returns `{"status":"ok"}` only when the database can be reached.
+**See [DEPLOYMENT.md](../DEPLOYMENT.md) for complete deployment instructions.**
 
-Set these Render environment variables (the Blueprint marks secret values
-`sync: false`, so enter them in the Render dashboard):
+### Quick Setup Summary
 
-| Service | Variable | Value |
-|---|---|---|
-| API | `DATABASE_URL` | Blueprint default is `sqlite:////var/data/formula_requests.db` on the persistent disk. For managed PostgreSQL, replace with its internal connection URL. |
-| API | `FRONTEND_ORIGINS` | `https://formulaflow-frontend.onrender.com`; add any custom frontend origins as a comma-separated list. |
-| API | `PAYPAL_ENVIRONMENT` | `sandbox` |
-| API | `PAYPAL_CLIENT_ID` | Sandbox REST app client ID |
-| API | `PAYPAL_CLIENT_SECRET` | Secret from that same Sandbox REST app |
-| API | `PAYPAL_WEBHOOK_ID` | ID of the webhook registered on that Sandbox app |
-| API | `PICKUP_TOKEN_ENCRYPTION_KEY` | Generate with `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"` and keep stable. |
-| API | `PAYPAL_PAYOUT_SIMULATED` | `false` for PayPal Sandbox payouts; use `true` only for clearly labeled demos. |
-| API | `OPENAI_API_KEY` | OpenAI secret key used only by the authenticated Studio proxy. Never set this as a frontend `VITE_` variable. |
-| API | `OPENAI_MODEL` | OpenAI model ID used by `/api/llm`; set the model you have selected. |
-| Frontend | `VITE_API_BASE_URL` | `https://formulaflow-api.onrender.com` |
-| Frontend | `VITE_PAYPAL_CLIENT_ID` | The same Sandbox client ID as the API |
-| Frontend | `VITE_AG_STUDIO_LICENSE_KEY` | AG Studio licence key, if using `/studio`. |
+1. **Database**: Use PostgreSQL (Vercel Postgres, Neon, Supabase). SQLite will NOT work on Vercel serverless.
 
-After deployment, the PayPal webhook URL is
-`https://formulaflow-api.onrender.com/api/paypal/webhook`. Register it under
-**Apps & Credentials → Sandbox → your REST app → Webhooks** and subscribe to
-the capture and payout event types listed above. If you use a custom API
-domain, register that domain's HTTPS webhook URL instead. Set the resulting
-webhook ID as `PAYPAL_WEBHOOK_ID` and the frontend's actual deployed/custom
-origin in `FRONTEND_ORIGINS`, then redeploy the API.
+2. **Backend Environment Variables** (Set in Vercel dashboard for `formula-flow-uh98`):
+   - `DATABASE_URL` - PostgreSQL connection string (REQUIRED)
+   - `FRONTEND_ORIGINS` - `https://formula-flow-9461.vercel.app`
+   - `PAYPAL_ENVIRONMENT` - `sandbox`
+   - `PAYPAL_CLIENT_ID` - Sandbox REST app client ID
+   - `PAYPAL_CLIENT_SECRET` - Secret from same Sandbox app
+   - `PAYPAL_WEBHOOK_ID` - Webhook ID from PayPal
+   - `PICKUP_TOKEN_ENCRYPTION_KEY` - Generate with `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`
+   - `PAYPAL_PAYOUT_SIMULATED` - `false` for real payouts
+   - `OPENAI_API_KEY` - OpenAI key for Studio AI
+   - `OPENAI_MODEL` - e.g., `gpt-4o`
 
-The first admin account must be created before publicly sharing the app; after
-creation, public admin registration is closed. The Blueprint uses a persistent
-disk for SQLite, which is intended for a single API instance. A Render-managed
-PostgreSQL database is recommended before scaling horizontally. Keep PayPal
-client secrets and the pickup-token encryption key only on the API service;
-Vite's `VITE_` variables are built into browser assets.
+3. **Frontend Environment Variables** (Set in Vercel dashboard for `formula-flow-9461`):
+   - `VITE_API_BASE_URL` - `https://formula-flow-uh98.vercel.app`
+   - `VITE_PAYPAL_CLIENT_ID` - Same Sandbox client ID as backend
+   - `VITE_AG_STUDIO_LICENSE_KEY` - AG Studio license key
 
-The Studio AI proxy requires an authenticated admin session, forwards streamed
-OpenAI Responses API traffic (including function/tool calls), and limits each
-admin account to 30 requests per minute per API process. Configure
-`OPENAI_API_KEY` and `OPENAI_MODEL` on the API service. The in-memory limit is
-per process; use a shared rate-limit store before scaling the API horizontally.
+4. **PayPal Webhook**: Register `https://formula-flow-uh98.vercel.app/api/paypal/webhook` in PayPal Developer Dashboard
+
+5. **Health Check**: Verify deployment at `https://formula-flow-uh98.vercel.app/health`
+
+### Database Migration from SQLite
+
+If migrating from SQLite, export your data and import to PostgreSQL:
+
+```bash
+# Export SQLite
+sqlite3 formula_requests.db .dump > backup.sql
+
+# Import to PostgreSQL (may need syntax adjustments)
+psql $DATABASE_URL < backup.sql
+```
+
+Or use `pgloader` for automated migration.
+
+### Important Notes
+
+- Vercel serverless functions have no persistent filesystem
+- Use PostgreSQL with connection pooling for production
+- Keep secrets (API keys, database credentials) in Vercel environment variables only
+- Never expose `PAYPAL_CLIENT_SECRET` or `OPENAI_API_KEY` in frontend variables
+- The in-memory rate limiter is per-function instance; use Redis for multi-instance deployments
